@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رحلة في عالم المرايا الكروية | لعبة تعليمية تفاعلية</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            dark: '#07111e',
+                            DEFAULT: '#0b192c',
+                            light: '#1e3e62',
+                            bright: '#2a5282'
+                        },
+                        gold: {
+                            light: '#ffe082',
+                            DEFAULT: '#ffc107',
+                            dark: '#d4af37'
+                        },
+                        ivory: '#f8f9fa'
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #07111e;
+            color: #f8f9fa;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b192c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+
+        /* Glowing Effects */
+        .glow-gold {
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+        .glow-blue {
+            box-shadow: 0 0 15px rgba(42, 82, 130, 0.5);
+        }
+        .text-glow {
+            text-shadow: 0 0 8px rgba(255, 193, 7, 0.6);
+        }
+
+        /* Custom Button Hover Dynamics */
+        .btn-action {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+        .btn-action:active {
+            transform: translateY(1px);
+        }
+
+        /* Canvas Style - Bright Dark Navy Background */
+        canvas {
+            touch-action: none;
+            background-color: #0d1b2a !important;
+        }
+
+        /* Tab Transitions */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mirror-card {
+            background: linear-gradient(135deg, rgba(27, 38, 59, 0.85), rgba(13, 27, 42, 0.95));
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Custom Legend Badges */
+        .legend-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            background-color: rgba(13, 27, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-gradient-to-b from-navy-dark via-navy to-black">
+
+    <!-- Header Navigation Bar -->
+    <header class="bg-navy-dark/90 border-b border-gold/30 sticky top-0 z-50 backdrop-blur-md px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-3 space-x-reverse cursor-pointer" onclick="switchStage('welcome')">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-gold-dark to-gold flex items-center justify-center text-navy-dark text-xl font-bold glow-gold">
+                    <i class="fa-solid font-bold fa-compact-disc"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-black text-gold tracking-wide">رحلة في عالم المرايا الكروية</h1>
+                    <p class="text-xs text-gray-300">الفيزياء للصف الثالث الثانوي - المستوى الخامس</p>
+                </div>
+            </div>
+
+            <!-- Score & Progress Indicator -->
+            <div id="top-nav-stats" class="hidden flex items-center gap-4 bg-navy-light/50 px-4 py-1.5 rounded-full border border-gold/20">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-star text-gold text-lg"></i>
+                    <span id="global-score" class="text-gold font-bold text-lg">0</span>
+                    <span class="text-xs text-gray-300">نقطة</span>
+                </div>
+                <div class="h-4 w-px bg-gold/30"></div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-bars-progress text-blue-400"></i>
+                    <span id="stage-progress-text" class="text-xs text-gray-200">المرحلة 1 من 5</span>
+                </div>
+            </div>
+
+            <!-- Navigation Menu Buttons -->
+            <nav id="top-nav-menu" class="hidden flex items-center gap-1 overflow-x-auto py-1 max-w-full">
+                <button onclick="switchStage('stage1')" class="nav-btn px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition hover:bg-gold/20 hover:text-gold border border-transparent">1. الأنواع</button>
+                <button onclick="switchStage('stage2')" class="nav-btn px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition hover:bg-gold/20 hover:text-gold border border-transparent">2. الأشعة</button>
+                <button onclick="switchStage('stage3')" class="nav-btn px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition hover:bg-gold/20 hover:text-gold border border-transparent">3. الصورة</button>
+                <button onclick="switchStage('stage4')" class="nav-btn px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition hover:bg-gold/20 hover:text-gold border border-transparent">4. القوانين</button>
+                <button onclick="switchStage('stage5')" class="nav-btn px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition hover:bg-gold/20 hover:text-gold border border-transparent">5. التحدي</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content Wrapper -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-3 md:p-6 flex flex-col justify-center">
+
+        <!-- ==================== SCREEN 0: WELCOME SCREEN ==================== -->
+        <section id="welcome" class="tab-content active my-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <!-- Project Information -->
+                <div class="lg:col-span-6 space-y-6 text-center lg:text-right">
+                    <div class="inline-block px-4 py-1.5 rounded-full bg-gold/10 border border-gold/40 text-gold text-sm font-semibold mb-2">
+                        ✨ مشروع الفيزياء التفاعلي - المنهج السعودي 1448هـ
+                    </div>
+                    <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight">
+                        رحلة في عالم <br><span class="text-gold text-glow">المرايا الكروية</span>
+                    </h1>
+                    <p class="text-gray-300 text-sm md:text-base leading-relaxed">
+                        تطبيق تعليمي محاكٍ وممتع يُقدّم بأسلوب فيزيائي تفاعلي حديث لتوضيح سلوك الضوء، مسارات الأشعة، قوانين التكبير، والمرايا المقعرة والمحدبة.
+                    </p>
+
+                    <!-- Academic Metadata Box -->
+                    <div class="mirror-card p-5 rounded-2xl grid grid-cols-2 gap-3 text-right text-xs md:text-sm">
+                        <div>
+                            <span class="text-gold block font-semibold">إعداد الطالبة:</span>
+                            <span class="text-white font-bold text-base">ميار الأنصاري</span>
+                        </div>
+                        <div>
+                            <span class="text-gold block font-semibold">الصف الدراسي:</span>
+                            <span class="text-white">ثالث ثانوي - مسار عام</span>
+                        </div>
+                        <div>
+                            <span class="text-gold block font-semibold">إشراف المعلمة:</span>
+                            <span class="text-white">خديجة الغامدي</span>
+                        </div>
+                        <div>
+                            <span class="text-gold block font-semibold">مديرة المدرسة:</span>
+                            <span class="text-white">منيرة الأسود</span>
+                        </div>
+                        <div class="col-span-2 pt-2 border-t border-gold/20 flex justify-between items-center text-xs text-gray-400">
+                            <span>المدرسة: الثانوية السابعة والستون</span>
+                            <span>العام الدراسي: 1448هـ – 2026/2027م</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <button onclick="switchStage('stage1')" class="btn-action bg-gradient-to-r from-gold-dark via-gold to-gold-light text-navy-dark font-black px-8 py-4 rounded-xl text-lg flex items-center justify-center gap-3 shadow-lg">
+                            <span>ابدئي الرحلة العلمية</span>
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Interactive Intro Light Animation Canvas -->
+                <div class="lg:col-span-6 flex flex-col items-center justify-center">
+                    <div class="relative w-full max-w-md aspect-square mirror-card rounded-3xl p-4 overflow-hidden flex flex-col items-center justify-center border-2 border-gold/30">
+                        <canvas id="welcomeCanvas" class="w-full h-full rounded-2xl"></canvas>
+                        <div class="absolute bottom-4 bg-navy-dark/80 px-4 py-1.5 rounded-full border border-gold/30 text-xs text-gold">
+                            <i class="fa-solid fa-wand-magic-sparkles ml-1"></i> محاكاة انحناء وانعكاس الضوء
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== STAGE 1: DISCOVER MIRROR TYPES ==================== -->
+        <section id="stage1" class="tab-content space-y-6">
+            <div class="flex justify-between items-center border-b border-gold/20 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gold">المرحلة الأولى: اكتشفي أنواع المرايا الكروية</h2>
+                    <p class="text-sm text-gray-300">تعرّفي على الفرق بين المرآة المقعرة والمحدبة واختبري قدرتك على التمييز بينهما.</p>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-navy-light text-gold border border-gold/30 text-xs font-bold">100 نقطة مجهزة</span>
+            </div>
+
+            <!-- Conceptual Explanations -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Concave Mirror Definition -->
+                <div class="mirror-card p-6 rounded-2xl space-y-3 hover:border-gold transition">
+                    <div class="flex items-center gap-3 text-gold text-lg font-bold">
+                        <i class="fa-solid fa-circle-half-stroke text-2xl"></i>
+                        <h3>المرآة المقعرة (Concave Mirror)</h3>
+                    </div>
+                    <p class="text-sm leading-relaxed text-gray-200">
+                        سطح عاكس جزء من سطح كروي، ويكون <span class="text-gold font-bold">سطحها العاكس مقعراً إلى الداخل</span> (تجمع الأشعة الضوئية). تُعرف أيضاً بالمرآة المجمعة.
+                    </p>
+                    <div class="bg-navy-dark/60 p-3 rounded-xl border border-navy-light text-xs text-gray-300">
+                        💡 <strong>تطبيقات:</strong> حلاقة الوجه، مرايا أطباء الأسنان، والمصابيح الأمامية للسيارات.
+                    </div>
+                </div>
+
+                <!-- Convex Mirror Definition -->
+                <div class="mirror-card p-6 rounded-2xl space-y-3 hover:border-gold transition">
+                    <div class="flex items-center gap-3 text-gold text-lg font-bold">
+                        <i class="fa-regular fa-circle-dot text-2xl"></i>
+                        <h3>المرآة المحدبة (Convex Mirror)</h3>
+                    </div>
+                    <p class="text-sm leading-relaxed text-gray-200">
+                        سطح عاكس جزء من سطح كروي، ويكون <span class="text-gold font-bold">سطحها العاكس بارزاً إلى الخارج</span> (تشتت الأشعة الضوئية). تُعرف أيضاً بالمرآة المفرقة.
+                    </p>
+                    <div class="bg-navy-dark/60 p-3 rounded-xl border border-navy-light text-xs text-gray-300">
+                        💡 <strong>تطبيقات:</strong> مرايا الرؤية الخلفية في السيارات، ومرايا المراقبة في المتاجر.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Sorting Activity -->
+            <div class="mirror-card p-6 rounded-2xl space-y-4">
+                <h3 class="text-lg font-bold text-white text-center">نشاط تفاعلي: صنيفي المرآة المعروضة</h3>
+                <p class="text-xs text-center text-gray-300">انظري إلى شكل المرآة واتجاه سطحها العاكس، ثم حددي نوعها:</p>
+
+                <div class="flex flex-col md:flex-row items-center justify-around gap-6 pt-2">
+                    <!-- Dynamic Graphic Container with SVG Rendering -->
+                    <div class="flex flex-col items-center w-full max-w-md">
+                        <div id="stage1SvgContainer" class="w-full h-64 bg-[#0d1b2a] rounded-2xl border-2 border-gold/50 p-4 flex items-center justify-center relative shadow-lg">
+                            <!-- SVG graphic rendered clearly here -->
+                        </div>
+                        <!-- Legend for Stage 1 -->
+                        <div id="stage1Legend" class="w-full mt-2 p-2 bg-[#0b192c] rounded-xl border border-gold/30 flex flex-wrap justify-center gap-2 text-xs">
+                            <span class="legend-badge text-cyan-300"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> السطح العاكس</span>
+                            <span class="legend-badge text-amber-300"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> المحور الرئيس / البؤرة F</span>
+                            <span class="legend-badge text-orange-400"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> الأشعة الضوئية</span>
+                            <span class="legend-badge text-slate-400"><span class="w-2.5 h-2.5 stroke-slate-400 border border-slate-400"></span> التظليل (الظهر)</span>
+                        </div>
+                    </div>
+
+                    <!-- Options & Feedback -->
+                    <div class="flex flex-col gap-4 w-full max-w-md">
+                        <button onclick="checkStage1Answer('concave')" class="btn-action w-full py-3.5 bg-navy-light hover:bg-gold hover:text-navy-dark border border-gold/40 rounded-xl text-white font-bold transition flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                            <span>مرآة مقعرة (سطح عاكس داخلي)</span>
+                        </button>
+
+                        <button onclick="checkStage1Answer('convex')" class="btn-action w-full py-3.5 bg-navy-light hover:bg-gold hover:text-navy-dark border border-gold/40 rounded-xl text-white font-bold transition flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            <span>مرآة محدبة (سطح عاكس خارجي)</span>
+                        </button>
+
+                        <div id="stage1Feedback" class="hidden p-4 rounded-xl text-sm font-semibold text-center border"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Bar -->
+            <div class="flex justify-between items-center pt-4">
+                <button onclick="switchStage('welcome')" class="px-5 py-2.5 rounded-xl bg-navy-light text-gray-200 hover:text-white border border-gray-600">السابق</button>
+                <button onclick="switchStage('stage2')" class="btn-action px-6 py-2.5 rounded-xl bg-gold text-navy-dark font-bold">المرحلة التالية: رحلة الأشعة <i class="fa-solid fa-arrow-left mr-1"></i></button>
+            </div>
+        </section>
+
+        <!-- ==================== STAGE 2: LIGHT RAYS SIMULATION ==================== -->
+        <section id="stage2" class="tab-content space-y-6">
+            <div class="flex justify-between items-center border-b border-gold/20 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gold">المرحلة الثانية: رحلة الأشعة الضوئية الرئيسة</h2>
+                    <p class="text-sm text-gray-300">اضغطي على الأشعة لرؤية المسار الهندسي وقواعد الانعكاس الفيزيائية.</p>
+                </div>
+                <!-- Mirror Toggle -->
+                <div class="flex bg-navy-dark p-1 rounded-xl border border-gold/30">
+                    <button id="toggleConcaveRay" onclick="setStage2Mirror('concave')" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-gold text-navy-dark transition">مرآة مقعرة</button>
+                    <button id="toggleConvexRay" onclick="setStage2Mirror('convex')" class="px-4 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white transition">مرآة محدبة</button>
+                </div>
+            </div>
+
+            <!-- Canvas Visualization & Ray Controls -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div class="lg:col-span-8 mirror-card p-4 rounded-2xl flex flex-col items-center">
+                    <canvas id="stage2Canvas" class="w-full h-80 rounded-xl border-2 border-gold/40 shadow-inner"></canvas>
+                    
+                    <!-- Dynamic Legend Bar for Stage 2 -->
+                    <div class="mt-3 w-full bg-[#0b192c] p-2.5 rounded-xl border border-gold/30 flex flex-wrap justify-center gap-3 text-xs">
+                        <span class="legend-badge text-amber-300"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> المحور الرئيس</span>
+                        <span class="legend-badge text-cyan-300"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> السطح العاكس (P)</span>
+                        <span class="legend-badge text-yellow-300"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span> البؤرة (F)</span>
+                        <span class="legend-badge text-blue-300"><span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span> مركز التكور (C)</span>
+                        <span class="legend-badge text-orange-400"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> الشعاع الساقط</span>
+                        <span class="legend-badge text-pink-400"><span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span> الشعاع المنعكس</span>
+                    </div>
+                </div>
+
+                <!-- Ray Buttons and Descriptions -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="bg-navy-dark/80 p-4 rounded-xl border border-gold/30">
+                        <h4 class="text-gold font-bold mb-3 text-sm">اختر الشعاع الضوئي للعرض:</h4>
+                        <div class="space-y-2.5">
+                            <button onclick="triggerRay(1)" class="w-full text-right p-3 rounded-xl bg-navy-light hover:border-gold border border-transparent transition text-xs font-bold text-white flex justify-between items-center">
+                                <span>1. الشعاع الموازي للمحور الرئيس</span>
+                                <i class="fa-solid fa-bolt text-gold"></i>
+                            </button>
+                            <button onclick="triggerRay(2)" class="w-full text-right p-3 rounded-xl bg-navy-light hover:border-gold border border-transparent transition text-xs font-bold text-white flex justify-between items-center">
+                                <span>2. الشعاع المار بالبؤرة (F)</span>
+                                <i class="fa-solid fa-arrow-trend-up text-gold"></i>
+                            </button>
+                            <button onclick="triggerRay(3)" class="w-full text-right p-3 rounded-xl bg-navy-light hover:border-gold border border-transparent transition text-xs font-bold text-white flex justify-between items-center">
+                                <span>3. الشعاع المار بمركز التكور (C)</span>
+                                <i class="fa-solid fa-arrows-to-dot text-gold"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Ray Explanation Box -->
+                    <div id="rayExplanationBox" class="mirror-card p-4 rounded-xl text-xs space-y-2 border-l-4 border-gold">
+                        <h5 id="rayTitle" class="text-gold font-bold text-sm">القاعدة الفيزيائية:</h5>
+                        <p id="rayDesc" class="text-gray-200 leading-relaxed">اضغطي على أحد الأزرار أعلاه لعرض سلوك الشعاع الضوئي وقاعدته عند اصطدامه بالمرآة.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between items-center pt-4">
+                <button onclick="switchStage('stage1')" class="px-5 py-2.5 rounded-xl bg-navy-light text-gray-200 border border-gray-600">السابق</button>
+                <button onclick="switchStage('stage3')" class="btn-action px-6 py-2.5 rounded-xl bg-gold text-navy-dark font-bold">المرحلة التالية: موقع الصورة <i class="fa-solid fa-arrow-left mr-1"></i></button>
+            </div>
+        </section>
+
+        <!-- ==================== STAGE 3: IMAGE FORMATION SIMULATOR ==================== -->
+        <section id="stage3" class="tab-content space-y-6">
+            <div class="flex justify-between items-center border-b border-gold/20 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gold">المرحلة الثالثة: أين تتكون الصورة؟</h2>
+                    <p class="text-sm text-gray-300">غيري موقع الجسم أمام المرآة ولاحظي كيف تتغير صفات وموقع الصورة المتكونة.</p>
+                </div>
+                <!-- Mirror Toggle -->
+                <div class="flex bg-navy-dark p-1 rounded-xl border border-gold/30">
+                    <button id="s3ConcaveBtn" onclick="setStage3Mirror('concave')" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-gold text-navy-dark">مرآة مقعرة</button>
+                    <button id="s3ConvexBtn" onclick="setStage3Mirror('convex')" class="px-4 py-1.5 rounded-lg text-xs font-bold text-gray-300">مرآة محدبة</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Interactive Canvas Simulation -->
+                <div class="lg:col-span-8 mirror-card p-4 rounded-2xl flex flex-col items-center">
+                    <canvas id="stage3Canvas" class="w-full h-80 rounded-xl border-2 border-gold/40 shadow-inner cursor-ew-resize"></canvas>
+
+                    <!-- Dynamic Legend Bar for Stage 3 -->
+                    <div class="mt-3 w-full bg-[#0b192c] p-2.5 rounded-xl border border-gold/30 flex flex-wrap justify-center gap-3 text-xs">
+                        <span class="legend-badge text-pink-400"><span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span> 💗 الجسم (Object)</span>
+                        <span class="legend-badge text-emerald-400"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 💚 الصورة المتكونة (Image)</span>
+                        <span class="legend-badge text-cyan-300"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> 🔵 المرآة والقطب P</span>
+                        <span class="legend-badge text-amber-300"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> 🟡 البؤرة F ومركز C</span>
+                    </div>
+
+                    <!-- Interactive Slider Control -->
+                    <div class="w-full max-w-lg mt-4 space-y-2">
+                        <div class="flex justify-between text-xs text-gray-300 font-bold">
+                            <span>بعيد جداً</span>
+                            <span>بعد الجسم عن القطب (do): <span id="doValDisplay" class="text-gold font-mono text-sm">250</span> cm</span>
+                            <span>قريب جداً</span>
+                        </div>
+                        <input id="objectSlider" type="range" min="30" max="350" value="250" class="w-full accent-gold bg-navy-light h-2 rounded-lg cursor-pointer" oninput="updateStage3Sim()">
+                    </div>
+                </div>
+
+                <!-- Live Physical Analysis Panel -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="mirror-card p-5 rounded-2xl space-y-4 border-t-4 border-gold">
+                        <h3 class="text-lg font-bold text-gold flex items-center gap-2">
+                            <i class="fa-solid fa-square-poll-vertical"></i> التحليل الفيزيائي للصورة
+                        </h3>
+
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between py-1.5 border-b border-gray-700">
+                                <span class="text-gray-400">موقع الجسم الحالي:</span>
+                                <span id="s3ObjectLoc" class="font-bold text-white">خارج مركز التكور (do > 2f)</span>
+                            </div>
+
+                            <div class="flex justify-between py-1.5 border-b border-gray-700">
+                                <span class="text-gray-400">طبيعة الصورة:</span>
+                                <span id="s3ImgType" class="font-bold text-gold">حقيقية</span>
+                            </div>
+
+                            <div class="flex justify-between py-1.5 border-b border-gray-700">
+                                <span class="text-gray-400">اتجاه الصورة:</span>
+                                <span id="s3ImgOrient" class="font-bold text-gold">مقلوبة</span>
+                            </div>
+
+                            <div class="flex justify-between py-1.5 border-b border-gray-700">
+                                <span class="text-gray-400">حجم الصورة:</span>
+                                <span id="s3ImgSize" class="font-bold text-gold">مصغرة</span>
+                            </div>
+
+                            <div class="flex justify-between py-1.5">
+                                <span class="text-gray-400">موقع الصورة (di):</span>
+                                <span id="s3ImgLoc" class="font-bold text-white">بين البؤرة ومركز التكور</span>
+                            </div>
+                        </div>
+
+                        <!-- Rule Summary Note -->
+                        <div id="s3RuleSummary" class="bg-navy-dark/80 p-3 rounded-xl text-xs text-gray-300 leading-relaxed border border-gold/20">
+                            تتكون صورة حقيقية ومقلوبة ومصغرة عندما يكون الجسم على بعد أكبر من ضعف البعد البؤري.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between items-center pt-4">
+                <button onclick="switchStage('stage2')" class="px-5 py-2.5 rounded-xl bg-navy-light text-gray-200 border border-gray-600">السابق</button>
+                <button onclick="switchStage('stage4')" class="btn-action px-6 py-2.5 rounded-xl bg-gold text-navy-dark font-bold">المرحلة التالية: القوانين والحسابات <i class="fa-solid fa-arrow-left mr-1"></i></button>
+            </div>
+        </section>
+
+        <!-- ==================== STAGE 4: PHYSICS LAWS & CALCULATOR ==================== -->
+        <section id="stage4" class="tab-content space-y-6">
+            <div class="flex justify-between items-center border-b border-gold/20 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gold">المرحلة الرابعة: مختبر القوانين الفيزيائية</h2>
+                    <p class="text-sm text-gray-300">استخدمي حاسبة المرايا، وادرمي الأمثلة المحلولة واختبري مهاراتك الحسابية.</p>
+                </div>
+            </div>
+
+            <!-- Formula Display -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="mirror-card p-4 rounded-xl text-center space-y-2 border-r-4 border-gold">
+                    <h4 class="text-sm font-bold text-gold">معادلة المرايا الكروية</h4>
+                    <p class="text-xl font-mono text-white font-bold" dir="ltr">1 / f = 1 / d<sub>o</sub> + 1 / d<sub>i</sub></p>
+                    <p class="text-xs text-gray-300">f: البعد البؤري | d<sub>o</sub>: بعد الجسم | d<sub>i</sub>: بعد الصورة</p>
+                </div>
+                <div class="mirror-card p-4 rounded-xl text-center space-y-2 border-r-4 border-gold">
+                    <h4 class="text-sm font-bold text-gold">معادلة التكبير</h4>
+                    <p class="text-xl font-mono text-white font-bold" dir="ltr">m = h<sub>i</sub> / h<sub>o</sub> = - d<sub>i</sub> / d<sub>o</sub></p>
+                    <p class="text-xs text-gray-300">m: التكبير | h<sub>i</sub>: ارتفاع الصورة | h<sub>o</sub>: ارتفاع الجسم</p>
+                </div>
+            </div>
+
+            <!-- Interactive Physics Calculator -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-6 mirror-card p-5 rounded-2xl space-y-4">
+                    <h3 class="text-lg font-bold text-gold flex items-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> الحاسبة الفيزيائية الآلية
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <label class="block text-gray-300 mb-1">نوع المرآة:</label>
+                            <select id="calcType" onchange="calculatePhysics()" class="w-full bg-navy-dark text-white p-2.5 rounded-lg border border-gold/30 font-bold focus:outline-none">
+                                <option value="concave">مرآة مقعرة (f موجب)</option>
+                                <option value="convex">مرآة محدبة (f سالب)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-1">البعد البؤري |f| (cm):</label>
+                            <input id="calcF" type="number" value="10" min="1" oninput="calculatePhysics()" class="w-full bg-navy-dark text-white p-2.5 rounded-lg border border-gold/30 font-bold focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-1">بعد الجسم d<sub>o</sub> (cm):</label>
+                            <input id="calcDo" type="number" value="30" min="0.1" oninput="calculatePhysics()" class="w-full bg-navy-dark text-white p-2.5 rounded-lg border border-gold/30 font-bold focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-1">ارتفاع الجسم h<sub>o</sub> (cm):</label>
+                            <input id="calcHo" type="number" value="5" min="0.1" oninput="calculatePhysics()" class="w-full bg-navy-dark text-white p-2.5 rounded-lg border border-gold/30 font-bold focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Calculated Outputs -->
+                    <div id="calcResults" class="bg-navy-dark/90 p-4 rounded-xl border border-gold/40 text-xs space-y-2">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+                </div>
+
+                <!-- Solved Example & Interactive Practice Problem -->
+                <div class="lg:col-span-6 space-y-4">
+                    <!-- Solved Example -->
+                    <div class="mirror-card p-5 rounded-2xl space-y-2 text-xs">
+                        <span class="bg-gold/20 text-gold px-2.5 py-1 rounded-md font-bold inline-block">مثال محلول</span>
+                        <h4 class="font-bold text-white text-sm">وضع جسم على بعد 15 cm أمام مرآة مقعرة بعدُها البؤري 10 cm. أوجدي بعد الصورة والتكبير.</h4>
+                        <div class="bg-navy-dark/60 p-3 rounded-lg space-y-1 font-mono text-gray-200" dir="ltr">
+                            <p>1/di = 1/f - 1/do = 1/10 - 1/15 = (3 - 2)/30 = 1/30</p>
+                            <p>di = +30 cm (صورة حقيقية أمام المرآة)</p>
+                            <p>m = -di / do = -30 / 15 = -2 (مكبرة مرتين ومقلوبة)</p>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Practice Quiz -->
+                    <div class="mirror-card p-5 rounded-2xl space-y-3 text-xs border-2 border-gold/30">
+                        <span class="bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-md font-bold inline-block">مسألة تدريبية</span>
+                        <p class="font-bold text-white text-sm">وضع جسم طوله 4 cm على بعد 20 cm أمام مرآة مقعرة بعدُها البؤري 10 cm. ما طول الصورة الناتجة (h<sub>i</sub>)؟</p>
+
+                        <div class="flex gap-2">
+                            <input id="practiceAnswer" type="number" placeholder="أدخلي القيمة بالـ cm..." class="bg-navy-dark p-2.5 rounded-lg border border-gold/30 text-white w-full focus:outline-none">
+                            <button onclick="checkPracticeProblem()" class="btn-action bg-gold text-navy-dark font-bold px-4 rounded-lg">تحقق</button>
+                        </div>
+                        <div id="practiceFeedback" class="hidden p-2.5 rounded-lg text-xs font-bold text-center"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between items-center pt-4">
+                <button onclick="switchStage('stage3')" class="px-5 py-2.5 rounded-xl bg-navy-light text-gray-200 border border-gray-600">السابق</button>
+                <button onclick="switchStage('stage5')" class="btn-action px-6 py-2.5 rounded-xl bg-gold text-navy-dark font-bold">المرحلة التالية: تحدي الخبيرات <i class="fa-solid fa-arrow-left mr-1"></i></button>
+            </div>
+        </section>
+
+        <!-- ==================== STAGE 5: EXPERT CHALLENGE QUIZ ==================== -->
+        <section id="stage5" class="tab-content space-y-6">
+            <div class="flex justify-between items-center border-b border-gold/20 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gold">المرحلة الخامسة: تحدّي الخبيرات</h2>
+                    <p class="text-sm text-gray-300">اختبري معرفتك بـ 10 أسئلة متدرجة وشاملة لدرس المرايا الكروية مدعومة بالرسومات التوضيحية ومفاتيح الدلالات.</p>
+                </div>
+                <div class="text-left">
+                    <span class="text-xs text-gray-400 block">تقدم الاختِبار</span>
+                    <span id="quizProgressText" class="text-lg font-bold text-gold">السؤال 1 من 10</span>
+                </div>
+            </div>
+
+            <!-- Quiz Container -->
+            <div class="max-w-3xl mx-auto mirror-card p-6 rounded-2xl space-y-5 shadow-2xl border-2 border-gold/30">
+                <!-- Question Header & Counter -->
+                <div class="flex justify-between items-center">
+                    <span id="qCategory" class="px-3 py-1 rounded-full bg-navy-light text-gold text-xs font-bold border border-gold/20">اختيار من متعدد</span>
+                    <div class="w-1/3 bg-navy-dark h-2 rounded-full overflow-hidden border border-navy-light">
+                        <div id="quizProgressBar" class="bg-gradient-to-r from-gold-dark to-gold h-full w-1/10 transition-all duration-300"></div>
+                    </div>
+                </div>
+
+                <!-- Question Text -->
+                <h3 id="questionText" class="text-lg md:text-xl font-bold text-white leading-relaxed">
+                    جاري تحميل السؤال...
+                </h3>
+
+                <!-- Question Diagram Wrapper with High-Clarity SVG & Legend -->
+                <div class="flex flex-col items-center w-full">
+                    <div id="qDiagramContainer" class="w-full min-h-[160px] bg-[#0d1b2a] rounded-2xl border-2 border-gold/40 p-3 flex items-center justify-center shadow-inner">
+                        <!-- SVG diagram injected dynamically -->
+                    </div>
+                    <!-- Universal Legend Box for Quiz Diagram -->
+                    <div id="quizLegendBox" class="w-full mt-2 p-2 bg-[#0b192c] rounded-xl border border-gold/30 flex flex-wrap justify-center gap-2 text-xs">
+                        <span class="legend-badge text-pink-400"><span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span> 💗 الجسم (Object)</span>
+                        <span class="legend-badge text-emerald-400"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 💚 الصورة (Image)</span>
+                        <span class="legend-badge text-amber-300"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> 🟡 المحور / F / C</span>
+                        <span class="legend-badge text-orange-400"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> 🔴 الأشعة والامتدادات</span>
+                        <span class="legend-badge text-cyan-300"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> 🔵 السطح العاكس</span>
+                    </div>
+                </div>
+
+                <!-- Answer Choices -->
+                <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Explanation & Feedback Box -->
+                <div id="quizFeedback" class="hidden p-4 rounded-xl text-xs leading-relaxed space-y-1 border">
+                    <!-- Dynamic Feedback -->
+                </div>
+
+                <!-- Next Question Button -->
+                <div class="flex justify-end pt-2">
+                    <button id="nextQuestionBtn" onclick="nextQuestion()" class="hidden btn-action px-6 py-2.5 rounded-xl bg-gold text-navy-dark font-bold text-sm">
+                        السؤال التالي <i class="fa-solid fa-arrow-left mr-1"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FINAL SCREEN: COMPLETION & CREDITS ==================== -->
+        <section id="completion" class="tab-content my-auto text-center space-y-6">
+            <div class="max-w-3xl mx-auto mirror-card p-8 rounded-3xl border-2 border-gold space-y-6 relative overflow-hidden glow-gold">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-gold/10 rounded-full blur-xl"></div>
+
+                <!-- Badge Animation -->
+                <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-gold-dark via-gold to-yellow-200 flex items-center justify-center text-navy-dark text-4xl shadow-2xl animate-bounce">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-3xl md:text-4xl font-black text-white">أحسنتِ! لقد أكملتِ رحلتك بنجاح 🎉</h2>
+                    <p class="text-gold font-bold text-lg">شارة المستحقّة: «خبيرة المرايا الكروية»</p>
+                </div>
+
+                <!-- Score Summary Cards -->
+                <div class="grid grid-cols-3 gap-3 max-w-md mx-auto py-2">
+                    <div class="bg-navy-dark/80 p-3 rounded-xl border border-gold/20">
+                        <span class="text-xs text-gray-400 block">النقاط الإجمالية</span>
+                        <span id="finalScore" class="text-xl font-bold text-gold">0</span>
+                    </div>
+                    <div class="bg-navy-dark/80 p-3 rounded-xl border border-gold/20">
+                        <span class="text-xs text-gray-400 block">نسبة النجاح</span>
+                        <span id="finalPercentage" class="text-xl font-bold text-green-400">0%</span>
+                    </div>
+                    <div class="bg-navy-dark/80 p-3 rounded-xl border border-gold/20">
+                        <span class="text-xs text-gray-400 block">الإجابات الصحيحة</span>
+                        <span id="finalCorrectCount" class="text-xl font-bold text-white">0/10</span>
+                    </div>
+                </div>
+
+                <!-- Summary of Physical Laws -->
+                <div class="bg-navy-dark/60 p-4 rounded-2xl text-xs text-right space-y-2 border border-navy-light max-w-xl mx-auto">
+                    <h4 class="text-gold font-bold text-center text-sm border-b border-gray-700 pb-1">ملخص القوانين والتمثيلات</h4>
+                    <p>• المرآة المقعرة مجمعة للأشعة وبؤرتها حقيقية موجب (+f).</p>
+                    <p>• المرآة المحدبة مفرقة للأشعة وبؤرتها وهمية خلف المرآة (-f).</p>
+                    <p>• الصورة الحقيقية مقلوبة وتتكون أمام المرآة (+di)، بينما الصورة الوهمية معتدلة وتتكون خلف المرآة (-di).</p>
+                </div>
+
+                <!-- Project Academic Credits -->
+                <div class="bg-navy-light/40 p-4 rounded-xl text-xs text-gray-300 grid grid-cols-2 gap-2 text-right border border-gold/20 max-w-xl mx-auto">
+                    <div><strong>عمل الطالبة:</strong> ميار الأنصاري</div>
+                    <div><strong>الصف:</strong> ثالث ثانوي - مسار عام</div>
+                    <div><strong>إشراف المعلمة:</strong> خديجة الغامدي</div>
+                    <div><strong>مديرة المدرسة:</strong> منيرة الأسود</div>
+                    <div class="col-span-2 text-center text-gold pt-1 border-t border-gray-700">الثانوية السابعة والستون - 1448هـ</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap justify-center gap-4 pt-2">
+                    <button onclick="restartGame()" class="btn-action bg-gold text-navy-dark font-bold px-8 py-3 rounded-xl flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> إعادة الرحلة
+                    </button>
+                    <button onclick="reviewErrors()" class="btn-action bg-navy-light text-white font-bold px-6 py-3 rounded-xl border border-gold/30 hover:border-gold">
+                        <i class="fa-solid fa-book-open"></i> مراجعة الأخطاء
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Banner -->
+    <footer class="bg-navy-dark border-t border-gold/20 py-3 text-center text-xs text-gray-400">
+        <p>تطبيق رحلة في عالم المرايا الكروية © 1448هـ – صُمم بأسلوب تفاعلي للمنهج السعودي للفيزياء</p>
+    </footer>
+
+    <!-- ==================== JAVASCRIPT GAME & SIMULATION LOGIC ==================== -->
+    <script>
+        /* Global Game State Variables */
+        let totalScore = 0;
+        let currentQIndex = 0;
+        let quizScore = 0;
+        let userAnswers = [];
+
+        // Stage States
+        let s1MirrorType = 'concave'; // 'concave' or 'convex'
+        let s2MirrorType = 'concave';
+        let s2RaySelected = 1;
+        let s3MirrorType = 'concave';
+        let s3ObjectDist = 250;
+
+        /* Navigation & Stage Controller */
+        function switchStage(stageId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(stageId);
+            if (target) target.classList.add('active');
+
+            // Show top navigation controls when not on welcome screen
+            const navStats = document.getElementById('top-nav-stats');
+            const navMenu = document.getElementById('top-nav-menu');
+            if (stageId === 'welcome') {
+                navStats.classList.add('hidden');
+                navMenu.classList.add('hidden');
+            } else {
+                navStats.classList.remove('hidden');
+                navStats.classList.add('flex');
+                navMenu.classList.remove('hidden');
+                navMenu.classList.add('flex');
+            }
+
+            // Update Stage progress indicator
+            const stageNumMap = { 'stage1': 1, 'stage2': 2, 'stage3': 3, 'stage4': 4, 'stage5': 5 };
+            if (stageNumMap[stageId]) {
+                document.getElementById('stage-progress-text').innerText = `المرحلة ${stageNumMap[stageId]} من 5`;
+            }
+
+            // Trigger canvas/drawing updates for active stage
+            if (stageId === 'stage1') renderStage1Svg();
+            if (stageId === 'stage2') drawStage2Rays();
+            if (stageId === 'stage3') drawStage3Sim();
+            if (stageId === 'stage4') calculatePhysics();
+            if (stageId === 'stage5' && userAnswers.length === 0 && currentQIndex === 0) loadQuizQuestion();
+        }
+
+        /* Helper Functions */
+        function addScore(pts) {
+            totalScore += pts;
+            document.getElementById('global-score').innerText = totalScore;
+        }
+
+        function checkStage1Answer(type) {
+            const feedback = document.getElementById('stage1Feedback');
+            feedback.classList.remove('hidden', 'bg-green-900/80', 'bg-red-900/80', 'border-green-500', 'border-red-500', 'text-green-200', 'text-red-200');
+
+            if (type === s1MirrorType) {
+                feedback.classList.add('bg-green-900/80', 'border-green-500', 'text-green-200');
+                feedback.innerHTML = `✨ ممتازة! إجابة صحيحة. (${type === 'concave' ? 'المرآة المقعرة تعكس الضوء من السطح الداخلي وتجمعه' : 'المرآة المحدبة تعكس الضوء من السطح الخارجي وتفرقه'}). (+20 نقطة)`;
+                addScore(20);
+            } else {
+                feedback.classList.add('bg-red-900/80', 'border-red-500', 'text-red-200');
+                feedback.innerHTML = `❌ إجابة خاطئة! انظري بدقة إلى انحناء السطح العاكس.`;
+            }
+        }
+
+        function triggerRay(rayNum) {
+            s2RaySelected = rayNum;
+            const titleEl = document.getElementById('rayTitle');
+            const descEl = document.getElementById('rayDesc');
+
+            if (s2MirrorType === 'concave') {
+                if (rayNum === 1) {
+                    titleEl.innerText = "الشعاع الساقط موازياً للمحور الرئيس:";
+                    descEl.innerText = "ينعكس ماراً بالبؤرة الأصلية (F) للمرآة المقعرة.";
+                } else if (rayNum === 2) {
+                    titleEl.innerText = "الشعاع الساقط ماراً بالبؤرة (F):";
+                    descEl.innerText = "ينعكس موازياً للمحور الرئيس للمرآة المقعرة.";
+                } else {
+                    titleEl.innerText = "الشعاع الساقط ماراً بمركز التكور (C):";
+                    descEl.innerText = "ينعكس على نفسه مباشرةً لأن زاوية السقوط تساوي صفراً.";
+                }
+            } else {
+                if (rayNum === 1) {
+                    titleEl.innerText = "الشعاع الساقط موازياً للمحور الرئيس:";
+                    descEl.innerText = "ينعكس امتداده بحيث يمر بالبؤرة الوهمية (F) خلف المرآة المحدبة.";
+                } else if (rayNum === 2) {
+                    titleEl.innerText = "الشعاع الموجه نحو البؤرة (F):";
+                    descEl.innerText = "ينعكس موازياً للمحور الرئيس.";
+                } else {
+                    titleEl.innerText = "الشعاع الموجه نحو مركز التكور (C):";
+                    descEl.innerText = "ينعكس على نفسه لأن امتداده يمر بمركز التكور خلف المرآة.";
+                }
+            }
+            drawStage2Rays();
+        }
+
+        function setStage2Mirror(type) {
+            s2MirrorType = type;
+            document.getElementById('toggleConcaveRay').className = type === 'concave' ? 'px-4 py-1.5 rounded-lg text-xs font-bold bg-gold text-navy-dark transition' : 'px-4 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white transition';
+            document.getElementById('toggleConvexRay').className = type === 'convex' ? 'px-4 py-1.5 rounded-lg text-xs font-bold bg-gold text-navy-dark transition' : 'px-4 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white transition';
+            triggerRay(s2RaySelected);
+        }
+
+        function setStage3Mirror(type) {
+            s3MirrorType = type;
+            document.getElementById('s3ConcaveBtn').className = type === 'concave' ? 'px-4 py-1.5 rounded-lg text-xs font-bold bg-gold text-navy-dark' : 'px-4 py-1.5 rounded-lg text-xs font-bold text-gray-300';
+            document.getElementById('s3ConvexBtn').className = type === 'convex' ? 'px-4 py-1.5 rounded-lg text-xs font-bold bg-gold text-navy-dark' : 'px-4 py-1.5 rounded-lg text-xs font-bold text-gray-300';
+            drawStage3Sim();
+        }
+
+        function updateStage3Sim() {
+            s3ObjectDist = parseFloat(document.getElementById('objectSlider').value);
+            document.getElementById('doValDisplay').innerText = s3ObjectDist;
+            drawStage3Sim();
+        }
+
+        /* Canvas Drawing Helpers */
+        function drawPoint(ctx, x, y, color, label) {
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.font = 'bold 12px Cairo';
+            ctx.fillText(label, x - 4, y + 20);
+        }
+
+        function drawArrow(ctx, fromx, fromy, tox, toy, color) {
+            ctx.beginPath();
+            ctx.moveTo(fromx, fromy);
+            ctx.lineTo(tox, toy);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            const headlen = 10;
+            const angle = Math.atan2(toy - fromy, tox - fromx);
+            ctx.beginPath();
+            ctx.moveTo(tox, toy);
+            ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        function drawDashedLine(ctx, fromx, fromy, tox, toy, color) {
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(fromx, fromy);
+            ctx.lineTo(tox, toy);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        /* Intro Welcome Canvas Light Animation */
+        function initWelcomeCanvas() {
+            const canvas = document.getElementById('welcomeCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let angle = 0;
+
+            function animate() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+                ctx.fillStyle = '#0d1b2a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+
+                // Draw central mirror
+                ctx.beginPath();
+                ctx.arc(cx - 30, cy, 60, -Math.PI / 3, Math.PI / 3);
+                ctx.strokeStyle = '#00e5ff';
+                ctx.lineWidth = 5;
+                ctx.stroke();
+
+                // Animated light ray
+                const rayY = cy + Math.sin(angle) * 30;
+                ctx.beginPath();
+                ctx.moveTo(20, rayY);
+                ctx.lineTo(cx - 30, cy);
+                ctx.strokeStyle = '#ffd700';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Reflected ray
+                ctx.beginPath();
+                ctx.moveTo(cx - 30, cy);
+                ctx.lineTo(20, cy + (cy - rayY));
+                ctx.strokeStyle = '#ff4081';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                angle += 0.03;
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        /* Window OnLoad Initialisation */
+        window.onload = function() {
+            initWelcomeCanvas();
+            renderStage1Svg();
+            
+            // Adjust Canvas pixel dimensions on resize
+            const stage2Canvas = document.getElementById('stage2Canvas');
+            const stage3Canvas = document.getElementById('stage3Canvas');
+            if (stage2Canvas) { stage2Canvas.width = 600; stage2Canvas.height = 320; }
+            if (stage3Canvas) { stage3Canvas.width = 600; stage3Canvas.height = 320; }
+
+            calculatePhysics();
+        };
+
+        /* 10 Curriculum-Aligned Physics Questions with Vivid SVGs & Clear Elements */
+        const quizQuestions = [
+            {
+                type: 'mcq',
+                category: 'مفاهيم المرايا',
+                question: 'أي المرايا الكروية تكون بؤرتها وهمية وتقع خلف المرآة دائماً؟',
+                options: ['المرآة المقعرة', 'المرآة المحدبة', 'المرآة المستوية', 'جميع ما سبق'],
+                correct: 1,
+                explanation: 'المرآة المحدبة تفرق الأشعة المنعكسة، وتتلاقى امتداداتها خلف المرآة مشكلة بؤرة وهمية.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <!-- Background fill to prevent pitch black -->
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <!-- Principal Axis -->
+                    <line x1="20" y1="65" x2="300" y2="65" stroke="#ffd700" stroke-width="2" stroke-dasharray="4"/>
+                    <!-- Convex Mirror Arc -->
+                    <path d="M 130 20 A 80 80 0 0 1 130 110" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                    <!-- Hatching for back side -->
+                    <path d="M 122 25 L 130 20 M 122 45 L 130 40 M 122 65 L 130 60 M 122 85 L 130 80 M 122 105 L 130 100" stroke="#64748b" stroke-width="2"/>
+                    <!-- Pole P -->
+                    <circle cx="130" cy="65" r="4" fill="#ffffff"/>
+                    <text x="125" y="83" fill="#ffffff" font-size="11" font-weight="bold" font-family="Cairo">P</text>
+                    <!-- Virtual Focus F -->
+                    <circle cx="195" cy="65" r="5" fill="#ffd700"/>
+                    <text x="185" y="83" fill="#ffd700" font-size="11" font-weight="bold" font-family="Cairo">F (وهمية)</text>
+                    <!-- Center C -->
+                    <circle cx="260" cy="65" r="5" fill="#3b82f6"/>
+                    <text x="255" y="83" fill="#3b82f6" font-size="11" font-weight="bold" font-family="Cairo">C</text>
+                    <!-- Incident & Diverging Rays -->
+                    <line x1="20" y1="35" x2="130" y2="35" stroke="#ff5722" stroke-width="2.5"/>
+                    <line x1="130" y1="35" x2="20" y2="10" stroke="#ff5722" stroke-width="2.5"/>
+                    <line x1="130" y1="35" x2="195" y2="65" stroke="#ffb74d" stroke-width="2" stroke-dasharray="3"/>
+                </svg>`
+            },
+            {
+                type: 'tf',
+                category: 'صفات الصور',
+                question: 'الصورة الحقيقية تكون دائماً مقلوبة وتتكون من تلاقي الأشعة المنعكسة نفسها أمام المرآة.',
+                options: ['صحيح (صح)', 'خاطئ (خطأ)'],
+                correct: 0,
+                explanation: 'في الفيزياء، تكون الصور الحقيقية دائماً مقلوبة وتتكون أمام المرآة المقعرة نتيجة التلاقي المباشر للأشعة المنعكسة.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <line x1="10" y1="75" x2="310" y2="75" stroke="#ffd700" stroke-width="2"/>
+                    <!-- Concave Mirror -->
+                    <path d="M 250 15 A 85 85 0 0 0 250 115" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                    <!-- Object (Pink/Purple) -->
+                    <line x1="60" y1="75" x2="60" y2="30" stroke="#ff4081" stroke-width="4"/>
+                    <polygon points="60,20 53,32 67,32" fill="#ff4081"/>
+                    <text x="45" y="18" fill="#ff4081" font-size="11" font-weight="bold" font-family="Cairo">💗 الجسم</text>
+                    <!-- Real Inverted Image (Green) -->
+                    <line x1="130" y1="75" x2="130" y2="105" stroke="#00e676" stroke-width="4"/>
+                    <polygon points="130,115 123,103 137,103" fill="#00e676"/>
+                    <text x="100" y="127" fill="#00e676" font-size="11" font-weight="bold" font-family="Cairo">💚 صورة حقيقية مقلوبة</text>
+                    <!-- Focal Point -->
+                    <circle cx="180" cy="75" r="4" fill="#ffd700"/>
+                    <text x="176" y="65" fill="#ffd700" font-size="11" font-weight="bold" font-family="Cairo">F</text>
+                </svg>`
+            },
+            {
+                type: 'mcq',
+                category: 'مسارات الأشعة',
+                question: 'الشعاع الضوئي الساقط موازياً للمحور الرئيس لمرآة مقعرة ينعكس بحيث:',
+                options: ['يمر بمركز التكور C', 'يمر بالبؤرة F', 'ينعكس على نفسه', 'يمتد خلف المرآة موازياً'],
+                correct: 1,
+                explanation: 'وفق قوانين الانعكاس في المرايا المقعرة، الشعاع الموازي للمحور ينعكس ماراً بالبؤرة الأصلية.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <line x1="10" y1="65" x2="310" y2="65" stroke="#ffd700" stroke-width="2"/>
+                    <path d="M 250 15 A 85 85 0 0 0 250 115" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                    <!-- Ray parallel -->
+                    <line x1="20" y1="30" x2="245" y2="30" stroke="#ff5722" stroke-width="3"/>
+                    <polygon points="140,30 128,24 128,36" fill="#ff5722"/>
+                    <!-- Reflected ray through F -->
+                    <line x1="245" y1="30" x2="60" y2="100" stroke="#ff4081" stroke-width="3"/>
+                    <polygon points="150,65 158,55 146,58" fill="#ff4081"/>
+                    <!-- Focal point -->
+                    <circle cx="160" cy="65" r="5" fill="#ffd700"/>
+                    <text x="155" y="85" fill="#ffd700" font-size="12" font-weight="bold" font-family="Cairo">F</text>
+                </svg>`
+            },
+            {
+                type: 'mcq',
+                category: 'موقع الصورة',
+                question: 'عند وضع جسم في مركز التكور (C) لمرآة مقعرة، تكون صفات الصورة المتكونة:',
+                options: ['حقيقية ومقلوبة ومكبرة', 'وهمية ومعتدلة ومساوية', 'حقيقية ومقلوبة ومساوية للجسم', 'حقيقية ومكبرة ومعتدلة'],
+                correct: 2,
+                explanation: 'عند وضع الجسم تماماً عند مركز التكور C، تتكون له صورة حقيقية مقلوبة ومساوية للجسم وفي موقع C أيضاً.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <line x1="10" y1="65" x2="310" y2="65" stroke="#ffd700" stroke-width="2"/>
+                    <path d="M 260 15 A 85 85 0 0 0 260 115" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                    <!-- Center C Point -->
+                    <circle cx="110" cy="65" r="4" fill="#3b82f6"/>
+                    <text x="105" y="55" fill="#3b82f6" font-size="11" font-weight="bold" font-family="Cairo">C</text>
+                    <!-- Object at C -->
+                    <line x1="110" y1="65" x2="110" y2="25" stroke="#ff4081" stroke-width="4"/>
+                    <polygon points="110,15 103,27 117,27" fill="#ff4081"/>
+                    <!-- Image at C inverted -->
+                    <line x1="110" y1="65" x2="110" y2="105" stroke="#00e676" stroke-width="4"/>
+                    <polygon points="110,115 103,103 117,103" fill="#00e676"/>
+                </svg>`
+            },
+            {
+                type: 'mcq',
+                category: 'تطبيقات المرايا',
+                question: 'تُستخدم المرايا المحدبة على جانب السائق في السيارات لأنها:',
+                options: ['تكبر أشكال السيارات خلفه', 'تُعطي مجالك واسعاً وتكون صوراً معتدلة ومصغرة', 'تجمع الضوء وتوفر رؤية ليلية', 'تكون صوراً حقيقية ومقلوبة'],
+                correct: 1,
+                explanation: 'تتميز المرآة المحدبة بتوفير مدى رؤية واسع وتكوين صور معتدلة ومصغرة دائماً للأجسام خلفها.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <path d="M 110 20 A 90 90 0 0 1 110 110" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                    <path d="M 102 25 L 110 20 M 102 45 L 110 40 M 102 65 L 110 60 M 102 85 L 110 80 M 102 105 L 110 100" stroke="#64748b" stroke-width="2"/>
+                    <!-- Wide light beam spread -->
+                    <line x1="10" y1="15" x2="110" y2="40" stroke="#ff5722" stroke-width="2.5"/>
+                    <line x1="110" y1="40" x2="10" y2="5" stroke="#ff4081" stroke-width="2.5"/>
+                    <line x1="10" y1="115" x2="110" y2="90" stroke="#ff5722" stroke-width="2.5"/>
+                    <line x1="110" y1="90" x2="10" y2="125" stroke="#ff4081" stroke-width="2.5"/>
+                    <text x="145" y="70" fill="#ffffff" font-size="12" font-weight="bold" font-family="Cairo">مجال رؤية متسع + صورة مصغرة</text>
+                </svg>`
+            },
+            {
+                type: 'calc',
+                category: 'مسائل حسابية',
+                question: 'وضع جسم على بعد 30 cm أمام مرآة مقعرة بعدُها البؤري 10 cm. أين تتكون الصورة (d_i)؟',
+                options: ['15 cm', '20 cm', '30 cm', '5 cm'],
+                correct: 0,
+                explanation: '1/di = 1/f - 1/do = 1/10 - 1/30 = 2/30 = 1/15. بالتالي di = 15 cm.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <line x1="10" y1="75" x2="310" y2="75" stroke="#ffd700" stroke-width="2"/>
+                    <path d="M 270 15 A 85 85 0 0 0 270 115" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                    <text x="20" y="35" fill="#ffd700" font-size="12" font-family="Cairo" font-weight="bold">f = 10 cm | do = 30 cm</text>
+                    <text x="20" y="55" fill="#00e5ff" font-size="12" font-family="Cairo" font-weight="bold">1/d_i = 1/f - 1/d_o = 1/10 - 1/30</text>
+                    <text x="20" y="105" fill="#00e676" font-size="13" font-family="Cairo" font-weight="bold">d_i = 15 cm (صورة حقيقية)</text>
+                </svg>`
+            },
+            {
+                type: 'mcq',
+                category: 'معادلة التكبير',
+                question: 'إذا كان قيمة التكبير (m) تطلع بـ (-0.5)، فهذا يعني أن الصورة:',
+                options: ['وهمية ومكبرة', 'حقيقية ومقلوبة ومصغرة للنصف', 'وهمية ومصغرة', 'حقيقية ومعتدلة'],
+                correct: 1,
+                explanation: 'الإشارة السالمة تعني أن الصورة مقلوبة وحقيقية، والقيمة المطلقة (0.5) أقل من 1 تعني أنها مصغرة إلى النصف.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <text x="30" y="40" fill="#ffd700" font-size="15" font-family="Cairo" font-weight="bold">m = - d_i / d_o = -0.5</text>
+                    <text x="30" y="70" fill="#ff4081" font-size="12" font-family="Cairo" font-weight="bold">• إشارة (-) = صورة حقيقية ومقلوبة</text>
+                    <text x="30" y="95" fill="#00e676" font-size="12" font-family="Cairo" font-weight="bold">• قيمة 0.5 = مصغرة إلى النصف</text>
+                </svg>`
+            },
+            {
+                type: 'tf',
+                category: 'اصطلاح الإشارات',
+                question: 'البعد البؤري (f) للمرآة المحدبة يُعوض دائماً بإشارة موجبة في المعادلات الحسابية.',
+                options: ['صحيح (صح)', 'خاطئ (خطأ)'],
+                correct: 1,
+                explanation: 'عبارة خاطئة! البعد البؤري للمرآة المحدبة يُعوض دائماً بقيمة سالبة (-f) لأن بؤرتها وهمية وتقع خلف المرآة.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <line x1="20" y1="65" x2="300" y2="65" stroke="#ffd700" stroke-width="2"/>
+                    <path d="M 130 20 A 75 75 0 0 1 130 110" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                    <circle cx="200" cy="65" r="5" fill="#ff5252"/>
+                    <text x="170" y="90" fill="#ff5252" font-size="13" font-family="Cairo" font-weight="bold">f = - (سالب دائماً)</text>
+                </svg>`
+            },
+            {
+                type: 'mcq',
+                category: 'موقع الجسم',
+                question: 'متى تتكون صورة وهمية ومعتدلة ومكبرة لجسم أمام مرآة مقعرة؟',
+                options: ['عندما يكون الجسم بين البؤرة F وقطب المرآة P', 'عند مركز التكور C', 'خارج مركز التكور', 'في البؤرة تماماً'],
+                correct: 0,
+                explanation: 'عند وضع الجسم بين البؤرة والقطب (do < f)، تتلاقى امتدادات الأشعة خلف المرآة معطية صورة وهمية مكبرة.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <line x1="10" y1="80" x2="310" y2="80" stroke="#ffd700" stroke-width="2"/>
+                    <path d="M 190 15 A 85 85 0 0 0 190 115" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                    <!-- Focus F -->
+                    <circle cx="100" cy="80" r="4" fill="#ffd700"/>
+                    <text x="96" y="98" fill="#ffd700" font-size="10" font-family="Cairo">F</text>
+                    <!-- Object between F and Mirror -->
+                    <line x1="150" y1="80" x2="150" y2="45" stroke="#ff4081" stroke-width="4"/>
+                    <polygon points="150,35 143,47 157,47" fill="#ff4081"/>
+                    <!-- Virtual Enlarged Image Behind Mirror -->
+                    <line x1="250" y1="80" x2="250" y2="20" stroke="#00e676" stroke-width="4" stroke-dasharray="3"/>
+                    <polygon points="250,10 243,22 257,22" fill="#00e676"/>
+                    <text x="210" y="118" fill="#00e676" font-size="10" font-weight="bold" font-family="Cairo">صورة وهمية مكبرة</text>
+                </svg>`
+            },
+            {
+                type: 'mcq',
+                category: 'حالة خاصة',
+                question: 'عند وضع جسم عند البؤرة (F) تماماً لمرآة مقعرة:',
+                options: ['تتكون صورة مصغرة جداً', 'تتكون صورة وهمية', 'لا تتكون صورة لأن الأشعة تنعكس متوازية إلى المالانهائية', 'تتكون صورة في مركز التكور'],
+                correct: 2,
+                explanation: 'عند البؤرة تماماً تنعكس الأشعة الضوئية متوازية تماماً فلا تتلاقى ولا تشكل أي صورة.',
+                svg: `<svg viewBox="0 0 320 130" class="w-full h-32">
+                    <rect width="320" height="130" fill="#0d1b2a" rx="12"/>
+                    <line x1="10" y1="75" x2="310" y2="75" stroke="#ffd700" stroke-width="2"/>
+                    <path d="M 250 15 A 85 85 0 0 0 250 115" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                    <!-- Object at F -->
+                    <circle cx="140" cy="75" r="4" fill="#ffd700"/>
+                    <line x1="140" y1="75" x2="140" y2="30" stroke="#ff4081" stroke-width="4"/>
+                    <text x="135" y="93" fill="#ffd700" font-size="11" font-weight="bold" font-family="Cairo">F</text>
+                    <!-- Parallel reflected rays -->
+                    <line x1="245" y1="30" x2="20" y2="95" stroke="#ff5722" stroke-width="2.5"/>
+                    <line x1="245" y1="75" x2="20" y2="140" stroke="#ff5722" stroke-width="2.5"/>
+                    <text x="15" y="30" fill="#00e5ff" font-size="11" font-weight="bold" font-family="Cairo">أشعة متوازية (لا تلتقي)</text>
+                </svg>`
+            }
+        ];
+
+        /* Render Stage 1 SVG Function with Vivid Contrast */
+        function renderStage1Svg() {
+            const container = document.getElementById('stage1SvgContainer');
+            if (!container) return;
+
+            if (s1MirrorType === 'concave') {
+                container.innerHTML = `
+                    <svg viewBox="0 0 300 180" class="w-full h-full">
+                        <rect width="300" height="180" fill="#0d1b2a" rx="12"/>
+                        <!-- Principal Axis -->
+                        <line x1="10" y1="90" x2="290" y2="90" stroke="#ffd700" stroke-width="2" stroke-dasharray="4"/>
+                        <!-- Concave Arc -->
+                        <path d="M 220 20 A 100 100 0 0 0 220 160" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                        <!-- Rear Hatching -->
+                        <path d="M 220 20 L 232 15 M 228 45 L 240 40 M 232 70 L 244 65 M 232 110 L 244 105 M 228 135 L 240 130 M 220 160 L 232 155" stroke="#64748b" stroke-width="2.5"/>
+                        <!-- Light Ray converging -->
+                        <line x1="20" y1="40" x2="220" y2="40" stroke="#ff5722" stroke-width="3"/>
+                        <line x1="220" y1="40" x2="120" y2="90" stroke="#ff4081" stroke-width="3"/>
+                        <!-- Focal Point -->
+                        <circle cx="120" cy="90" r="5" fill="#ffd700"/>
+                        <text x="115" y="115" fill="#ffd700" font-size="13" font-weight="bold" font-family="Cairo">F</text>
+                        <text x="15" y="30" fill="#00e5ff" font-size="13" font-weight="bold" font-family="Cairo">السطح العاكس إلى الداخل (مقرّة)</text>
+                    </svg>`;
+            } else {
+                container.innerHTML = `
+                    <svg viewBox="0 0 300 180" class="w-full h-full">
+                        <rect width="300" height="180" fill="#0d1b2a" rx="12"/>
+                        <!-- Principal Axis -->
+                        <line x1="10" y1="90" x2="290" y2="90" stroke="#ffd700" stroke-width="2" stroke-dasharray="4"/>
+                        <!-- Convex Arc -->
+                        <path d="M 80 20 A 100 100 0 0 1 80 160" fill="none" stroke="#00e5ff" stroke-width="6"/>
+                        <!-- Rear Hatching -->
+                        <path d="M 80 20 L 68 15 M 72 45 L 60 40 M 68 70 L 56 65 M 68 110 L 56 105 M 72 135 L 60 130 M 80 160 L 68 155" stroke="#64748b" stroke-width="2.5"/>
+                        <!-- Light Ray diverging -->
+                        <line x1="20" y1="40" x2="80" y2="40" stroke="#ff5722" stroke-width="3"/>
+                        <line x1="80" y1="40" x2="20" y2="10" stroke="#ff4081" stroke-width="3"/>
+                        <line x1="80" y1="40" x2="180" y2="90" stroke="#ffb74d" stroke-width="2" stroke-dasharray="3"/>
+                        <!-- Virtual Focal Point -->
+                        <circle cx="180" cy="90" r="5" fill="#ffd700"/>
+                        <text x="170" y="115" fill="#ffd700" font-size="13" font-weight="bold" font-family="Cairo">F (وهمية)</text>
+                        <text x="110" y="30" fill="#00e5ff" font-size="13" font-weight="bold" font-family="Cairo">السطح العاكس إلى الخارج (محدبة)</text>
+                    </svg>`;
+            }
+        }
+
+        /* Draw Canvas Stage 2 with Deep Royal Navy & Bright Colors */
+        function drawStage2Rays() {
+            const canvas = document.getElementById('stage2Canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Clear & Fill Navy Background
+            ctx.fillStyle = '#0d1b2a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const cy = canvas.height / 2;
+            const mirrorX = s2MirrorType === 'concave' ? canvas.width - 80 : 80;
+            const Fx = s2MirrorType === 'concave' ? mirrorX - 100 : mirrorX + 100;
+            const Cx = s2MirrorType === 'concave' ? mirrorX - 200 : mirrorX + 200;
+
+            // Draw Principal Axis (Gold)
+            ctx.beginPath();
+            ctx.moveTo(10, cy);
+            ctx.lineTo(canvas.width - 10, cy);
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw Key Points (P, F, C)
+            drawPoint(ctx, mirrorX, cy, '#00e5ff', 'P');
+            drawPoint(ctx, Fx, cy, '#ffd700', 'F');
+            drawPoint(ctx, Cx, cy, '#3b82f6', 'C');
+
+            // Draw Curved Mirror
+            ctx.beginPath();
+            if (s2MirrorType === 'concave') {
+                ctx.arc(mirrorX - 120, cy, 140, -Math.PI / 4, Math.PI / 4);
+            } else {
+                ctx.arc(mirrorX + 120, cy, 140, 3 * Math.PI / 4, 5 * Math.PI / 4);
+            }
+            ctx.strokeStyle = '#00e5ff';
+            ctx.lineWidth = 6;
+            ctx.stroke();
+
+            // Draw Rays according to selection
+            ctx.lineWidth = 3;
+
+            if (s2MirrorType === 'concave') {
+                if (s2RaySelected === 1) {
+                    drawArrow(ctx, 20, cy - 60, mirrorX - 10, cy - 60, '#ff5722');
+                    drawArrow(ctx, mirrorX - 10, cy - 60, Fx - 100, cy + 40, '#ff4081');
+                } else if (s2RaySelected === 2) {
+                    drawArrow(ctx, Cx - 50, cy - 80, mirrorX - 5, cy + 50, '#ff5722');
+                    drawArrow(ctx, mirrorX - 5, cy + 50, 20, cy + 50, '#ff4081');
+                } else {
+                    drawArrow(ctx, Cx - 60, cy - 60, mirrorX - 15, cy - 15, '#ff5722');
+                    drawArrow(ctx, mirrorX - 15, cy - 15, Cx - 60, cy - 60, '#ff4081');
+                }
+            } else {
+                if (s2RaySelected === 1) {
+                    drawArrow(ctx, 20, cy - 60, mirrorX + 5, cy - 60, '#ff5722');
+                    drawArrow(ctx, mirrorX + 5, cy - 60, 20, cy - 120, '#ff4081');
+                    drawDashedLine(ctx, mirrorX + 5, cy - 60, Fx, cy, '#ffb74d');
+                } else if (s2RaySelected === 2) {
+                    drawArrow(ctx, 20, cy - 90, mirrorX + 5, cy - 20, '#ff5722');
+                    drawArrow(ctx, mirrorX + 5, cy - 20, 20, cy - 20, '#ff4081');
+                    drawDashedLine(ctx, mirrorX + 5, cy - 20, Fx, cy, '#ffb74d');
+                } else {
+                    drawArrow(ctx, 20, cy - 80, mirrorX + 5, cy - 25, '#ff5722');
+                    drawArrow(ctx, mirrorX + 5, cy - 25, 20, cy - 80, '#ff4081');
+                    drawDashedLine(ctx, mirrorX + 5, cy - 25, Cx, cy, '#ffb74d');
+                }
+            }
+        }
+
+        /* Draw Stage 3 Simulator with High Contrast Colors */
+        function drawStage3Sim() {
+            const canvas = document.getElementById('stage3Canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Fill Navy Background
+            ctx.fillStyle = '#0d1b2a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const cy = canvas.height / 2;
+            const mirrorX = s3MirrorType === 'concave' ? canvas.width - 80 : 100;
+            const fPixel = 80;
+            const Fx = s3MirrorType === 'concave' ? mirrorX - fPixel : mirrorX + fPixel;
+            const Cx = s3MirrorType === 'concave' ? mirrorX - (2 * fPixel) : mirrorX + (2 * fPixel);
+
+            // Draw Axis & Mirror
+            ctx.beginPath();
+            ctx.moveTo(10, cy);
+            ctx.lineTo(canvas.width - 10, cy);
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            drawPoint(ctx, mirrorX, cy, '#00e5ff', 'P');
+            drawPoint(ctx, Fx, cy, '#ffd700', 'F');
+            drawPoint(ctx, Cx, cy, '#3b82f6', 'C');
+
+            ctx.beginPath();
+            if (s3MirrorType === 'concave') {
+                ctx.arc(mirrorX - 100, cy, 120, -Math.PI / 4, Math.PI / 4);
+            } else {
+                ctx.arc(mirrorX + 100, cy, 120, 3 * Math.PI / 4, 5 * Math.PI / 4);
+            }
+            ctx.strokeStyle = '#00e5ff';
+            ctx.lineWidth = 6;
+            ctx.stroke();
+
+            // Object Arrow (Pink/Purple)
+            const objX = s3MirrorType === 'concave' ? mirrorX - s3ObjectDist : mirrorX - s3ObjectDist;
+            const objHeight = 50;
+            drawObjectArrow(ctx, objX, cy, objHeight, '#ff4081', '💗 الجسم');
+
+            let fVal = s3MirrorType === 'concave' ? fPixel : -fPixel;
+            let doVal = s3ObjectDist;
+            let diVal = (fVal * doVal) / (doVal - fVal);
+            let magnification = -diVal / doVal;
+            let imgHeight = objHeight * magnification;
+            let imgX = mirrorX - diVal;
+
+            if (s3MirrorType === 'concave' && Math.abs(doVal - fPixel) < 3) {
+                updateStage3Text('عند البؤرة (F)', 'لا تتكون صورة', 'لا توجد', 'غير محدد', 'في المالانهاية', 'الأشعة ينعكس متوازية تماماً إلى المالانهاية.');
+            } else if (diVal < 0) {
+                // Virtual Image (Green)
+                drawObjectArrow(ctx, mirrorX - diVal, cy, imgHeight, '#00e676', '💚 الصورة (وهمية)', true);
+                if (s3MirrorType === 'concave') {
+                    updateStage3Text('بين البؤرة F والقطب P', 'وهمية', 'معتدلة', 'مكبرة', 'خلف المرآة', 'تتكون صورة وهمية مكبرة خلف المرآة نتيجة تلاقي امتدادات الأشعة المنعكسة.');
+                } else {
+                    updateStage3Text('أمام المرآة المحدبة', 'وهمية', 'معتدلة', 'مصغرة', 'خلف المرآة', 'تتكون صورة وهمية معتدلة ومصغرة دائماً خلف المرآة المحدبة.');
+                }
+            } else {
+                // Real Image (Green)
+                drawObjectArrow(ctx, imgX, cy, imgHeight, '#00e676', '💚 الصورة (حقيقية)');
+                let sizeDesc = Math.abs(magnification) > 1.05 ? 'مكبرة' : (Math.abs(magnification) < 0.95 ? 'مصغرة' : 'مساوية للجسم');
+                let locDesc = doVal > 2 * fPixel ? 'بين البؤرة ومركز التكور' : (doVal === 2 * fPixel ? 'عند مركز التكور C' : 'خارج مركز التكور');
+                let objLocText = doVal > 2 * fPixel ? 'خارج مركز التكور (do > 2f)' : (doVal === 2 * fPixel ? 'عند مركز التكور (do = 2f)' : 'بين C و F');
+                updateStage3Text(objLocText, 'حقيقية', 'مقلوبة', sizeDesc, locDesc, 'تتكون صورة حقيقية أمام المرآة ناتجة عن التلاقي المباشر للأشعة المنعكسة.');
+            }
+        }
+
+        function drawObjectArrow(ctx, x, cy, height, color, label, isDashed = false) {
+            ctx.beginPath();
+            if (isDashed) ctx.setLineDash([4, 4]);
+            ctx.moveTo(x, cy);
+            ctx.lineTo(x, cy - height);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Arrow head
+            const dir = height > 0 ? -1 : 1;
+            ctx.beginPath();
+            ctx.moveTo(x, cy - height);
+            ctx.lineTo(x - 6, cy - height - (dir * 10));
+            ctx.lineTo(x + 6, cy - height - (dir * 10));
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            ctx.font = 'bold 11px Cairo';
+            ctx.fillStyle = color;
+            ctx.fillText(label, x - 15, cy - height - (dir * 15));
+        }
+
+        function updateStage3Text(loc, type, orient, size, imgLoc, summary) {
+            document.getElementById('s3ObjectLoc').innerText = loc;
+            document.getElementById('s3ImgType').innerText = type;
+            document.getElementById('s3ImgOrient').innerText = orient;
+            document.getElementById('s3ImgSize').innerText = size;
+            document.getElementById('s3ImgLoc').innerText = imgLoc;
+            document.getElementById('s3RuleSummary').innerText = summary;
+        }
+
+        /* ==================== STAGE 4: PHYSICS CALCULATOR ==================== */
+        function calculatePhysics() {
+            const type = document.getElementById('calcType').value;
+            let f = parseFloat(document.getElementById('calcF').value);
+            const doVal = parseFloat(document.getElementById('calcDo').value);
+            const hoVal = parseFloat(document.getElementById('calcHo').value);
+            const resultsBox = document.getElementById('calcResults');
+
+            if (type === 'convex') f = -Math.abs(f);
+
+            if (!f || !doVal || doVal <= 0) {
+                resultsBox.innerHTML = '<span class="text-red-400 font-bold">يرجى إدخال قيم رياضية صالحة.</span>';
+                return;
+            }
+
+            if (doVal === f) {
+                resultsBox.innerHTML = '<span class="text-yellow-400 font-bold">الجسم في البؤرة تماماً: بعد الصورة di = ∞ (المالانهاية)، لا تتكون صورة معرّفة.</span>';
+                return;
+            }
+
+            // 1/di = 1/f - 1/do
+            const di = (f * doVal) / (doVal - f);
+            const m = -di / doVal;
+            const hi = m * hoVal;
+
+            const isReal = di > 0;
+            const isInverted = m < 0;
+            const isMagnified = Math.abs(m) > 1;
+
+            resultsBox.innerHTML = `
+                <div class="grid grid-cols-2 gap-2">
+                    <div><strong>بعد الصورة (d<sub>i</sub>):</strong> <span class="text-gold font-bold font-mono">${di.toFixed(2)} cm</span></div>
+                    <div><strong>التكبير (m):</strong> <span class="text-gold font-bold font-mono">${m.toFixed(2)}</span></div>
+                    <div><strong>طول الصورة (h<sub>i</sub>):</strong> <span class="text-gold font-bold font-mono">${hi.toFixed(2)} cm</span></div>
+                    <div><strong>نوع الصورة:</strong> <span class="text-white font-bold">${isReal ? 'حقيقية (أمام المرآة)' : 'وهمية (خلف المرآة)'}</span></div>
+                    <div><strong>الاتجاه:</strong> <span class="text-white font-bold">${isInverted ? 'مقلوبة' : 'معتدلة'}</span></div>
+                    <div><strong>الحجم:</strong> <span class="text-white font-bold">${isMagnified ? 'مكبرة' : 'مصغرة'}</span></div>
+                </div>
+            `;
+        }
+
+        function checkPracticeProblem() {
+            const val = parseFloat(document.getElementById('practiceAnswer').value);
+            const feedback = document.getElementById('practiceFeedback');
+            feedback.classList.remove('hidden', 'bg-green-900/80', 'bg-red-900/80', 'text-green-200', 'text-red-200');
+
+            if (val === -4 || val === 4) {
+                feedback.classList.add('bg-green-900/80', 'text-green-200');
+                feedback.innerHTML = '✨ إجابة صحيحة! hi = -4 cm. الصورة مساوية للجسم ومقلوبة. (+10 نقاط)';
+                addScore(10);
+            } else {
+                feedback.classList.add('bg-red-900/80', 'text-red-200');
+                feedback.innerHTML = '❌ إجابة خاطئة. احسبي أولاً di = 20cm، ثم استخدمي m = -di/do = -1، بالتالي hi = -4cm.';
+            }
+        }
+
+        /* ==================== STAGE 5: QUIZ LOGIC ==================== */
+        function loadQuizQuestion() {
+            if (currentQIndex >= quizQuestions.length) {
+                finishGame();
+                return;
+            }
+
+            const q = quizQuestions[currentQIndex];
+            document.getElementById('quizProgressText').innerText = `السؤال ${currentQIndex + 1} من 10`;
+            document.getElementById('quizProgressBar').style.width = `${((currentQIndex + 1) / 10) * 100}%`;
+            document.getElementById('qCategory').innerText = q.category;
+            document.getElementById('questionText').innerText = q.question;
+
+            // Render SVG Diagram for Quiz
+            const diagramContainer = document.getElementById('qDiagramContainer');
+            diagramContainer.innerHTML = q.svg || '';
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            const feedback = document.getElementById('quizFeedback');
+            feedback.classList.add('hidden');
+            document.getElementById('nextQuestionBtn').classList.add('hidden');
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-right p-4 rounded-xl bg-navy-light hover:bg-gold/20 hover:border-gold border border-gold/20 text-white font-semibold transition text-xs md:text-sm flex items-center gap-3';
+                btn.innerHTML = `<span class="w-6 h-6 rounded-full bg-navy-dark text-gold flex items-center justify-center font-bold text-xs">${idx + 1}</span> <span>${opt}</span>`;
+                btn.onclick = () => checkQuizAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkQuizAnswer(selectedIdx) {
+            const q = quizQuestions[currentQIndex];
+            const feedback = document.getElementById('quizFeedback');
+            const options = document.getElementById('optionsContainer').children;
+
+            // Disable all option buttons
+            for (let btn of options) {
+                btn.disabled = true;
+                btn.classList.add('opacity-60', 'cursor-not-allowed');
+            }
+
+            userAnswers.push({ question: q.question, selected: selectedIdx, correct: q.correct, exp: q.explanation });
+
+            feedback.classList.remove('hidden', 'bg-green-900/80', 'border-green-500', 'bg-red-900/80', 'border-red-500', 'text-green-200', 'text-red-200');
+
+            if (selectedIdx === q.correct) {
+                options[selectedIdx].classList.add('bg-green-600', 'text-white');
+                feedback.classList.add('bg-green-900/80', 'border-green-500', 'text-green-200');
+                feedback.innerHTML = `<strong><i class="fa-solid fa-circle-check"></i> إجابة صحيحة! (+10 نقاط)</strong><p class="mt-1">${q.explanation}</p>`;
+                quizScore += 10;
+                addScore(10);
+            } else {
+                options[selectedIdx].classList.add('bg-red-600', 'text-white');
+                options[q.correct].classList.add('bg-green-600', 'text-white');
+                feedback.classList.add('bg-red-900/80', 'border-red-500', 'text-red-200');
+                feedback.innerHTML = `<strong><i class="fa-solid fa-circle-xmark"></i> إجابة خاطئة!</strong><p class="mt-1">${q.explanation}</p>`;
+            }
+
+            document.getElementById('nextQuestionBtn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            loadQuizQuestion();
+        }
+
+        /* ==================== SCREEN: COMPLETION & CREDITS ==================== */
+        function finishGame() {
+            switchStage('completion');
+
+            const totalCorrect = userAnswers.filter(a => a.selected === a.correct).length;
+            const percentage = Math.round((totalCorrect / 10) * 100);
+
+            document.getElementById('finalScore').innerText = totalScore;
+            document.getElementById('finalPercentage').innerText = `${percentage}%`;
+            document.getElementById('finalCorrectCount').innerText = `${totalCorrect}/10`;
+        }
+
+        function restartGame() {
+            currentQIndex = 0;
+            quizScore = 0;
+            totalScore = 0;
+            userAnswers = [];
+            addScore(0);
+            switchStage('welcome');
+        }
+
+        function reviewErrors() {
+            let errorListHtml = '<div class="space-y-3 text-right max-h-96 overflow-y-auto p-2">';
+            const errors = userAnswers.filter(a => a.selected !== a.correct);
+
+            if (errors.length === 0) {
+                errorListHtml += '<p class="text-green-400 font-bold text-center">رائع جداً! لم تقمي بأي إجابة خاطئة.</p>';
+            } else {
+                errors.forEach((err, idx) => {
+                    errorListHtml += `
+                        <div class="bg-navy-dark p-3 rounded-xl border border-red-500/30 text-xs">
+                            <p class="text-gold font-bold">${idx + 1}. ${err.question}</p>
+                            <p class="text-gray-300 mt-1">💡 التفسير الصحيح: ${err.exp}</p>
+                        </div>
+                    `;
+                });
+            }
+            errorListHtml += '</div>';
+
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50';
+            modal.innerHTML = `
+                <div class="mirror-card p-6 rounded-2xl max-w-lg w-full space-y-4 border border-gold">
+                    <h3 class="text-lg font-bold text-gold text-center">مراجعة الأسئلة والأخطاء</h3>
+                    ${errorListHtml}
+                    <button onclick="this.parentElement.parentElement.remove()" class="w-full py-2 bg-gold text-navy-dark font-bold rounded-xl">إغلاق</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
